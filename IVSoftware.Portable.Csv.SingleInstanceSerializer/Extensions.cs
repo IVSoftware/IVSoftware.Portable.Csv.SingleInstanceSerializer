@@ -9,16 +9,40 @@ namespace IVSoftware.Portable.Csv
 {
     public static class Extensions
     {
-        public static string GetCsvHeader(this Type @type) =>
-            string.Join(", ", @type.GetCsvHeaderArray());
-        public static string[] GetCsvHeaderArray(this Type @type) =>
-            @type
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Where(_ => !Attribute.IsDefined(_, typeof(CsvIgnoreAttribute)))
-                .Select(_ => _.Name)
-                .ToArray();
+        /// <summary>
+        /// Enumerates the public R/W property names of an instance of @type.
+        /// </summary>
+        /// <returns>Comma delimited list of names.</returns>
+        public static string GetCsvHeader(this Type @type)
+        {
+            KnownTypeInfo info;
+            if (!KnownTypeDict.TryGetValue(@type, out info))
+            {
+                info = new KnownTypeInfo(@type);
+            }
+            return info.CsvHeader;
+        }
+        /// <summary>
+        /// Enumerates the public R/W property names of an instance of @type.
+        /// </summary>
+        /// <returns>String array of names.</returns>
+        public static string[] GetCsvHeaderArray(this Type @type)
+        {
+            KnownTypeInfo info;
+            if (!KnownTypeDict.TryGetValue(@type, out info))
+            {
+                info = new KnownTypeInfo(@type);
+            }
+            return info.CsvHeaderArray;
+        }
 
         const string IGNORE_ESCAPED_COMMAS_PATTERN = @",(?=(?:[^""]*""[^""]*"")*(?![^""]*""))";
+
+        /// <summary>
+        /// Deserializes an instance of @type from comma delimited string 
+        /// based on names obtained from GetCsvHeader().
+        /// </summary>
+        /// <returns>Instance of type T</returns>
         public static T FromCsvLine<T>(this Type @type, string csvLine) 
             where T : new()
         {
@@ -70,14 +94,48 @@ namespace IVSoftware.Portable.Csv
                 return newT;
             }
         }
-        [CsvIgnore]
-        static string property { get; set; }
+
+        /// <summary>
+        /// Deserializes an instance of @type from comma delimited string 
+        /// based on names obtained from GetCsvHeader().
+        /// </summary>
+        /// <returns>Comma delimited enumuration of public R/W property values.</returns>
+        public static string ToCsvLine<T>(this T instance)
+        {
+            return
+                string.Join(
+                    ",",
+                    instance.GetType()
+                        .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                        .Where(_=>_.CanRead || _.CanWrite)
+                        .Select(_ => localEscape(_.GetValue(instance)?.ToString() ?? string.Empty)));
+            string localEscape(string mightHaveCommas)
+            {
+                if (mightHaveCommas.Contains(","))
+                {
+                    return $@"""{mightHaveCommas}""";
+                }
+                else return mightHaveCommas;
+            }
+        }
+
         private static Dictionary<Type, KnownTypeInfo> KnownTypeDict { get; } = 
             new Dictionary<Type, KnownTypeInfo>();
         private class KnownTypeInfo
         {
-            public string CsvHeader { get; set; }
-            public string[] CsvHeaderArray { get; set; }
+            public KnownTypeInfo(Type type)
+            {
+                CsvHeaderArray = @type
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(_ => !Attribute.IsDefined(_, typeof(CsvIgnoreAttribute)))
+                    .Where(_ => _.CanRead || _.CanWrite)
+                    .Select(_ => _.Name)
+                    .ToArray();
+
+                CsvHeader = string.Join(", ", CsvHeaderArray);
+            }
+            public string CsvHeader { get; }
+            public string[] CsvHeaderArray { get;  }
         }
     }
     public class CsvIgnoreAttribute : Attribute { }
