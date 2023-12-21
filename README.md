@@ -1,16 +1,36 @@
 ## IVSoftware.Portable.Csv.SingleInstanceSerializer
 
+These extensions reflect the properties of a given class T. The basic capabilities are:
+
+- Generate a comma-delimited header string, based on the property names of class T.
+- Given an instance of class T, generate a comma-delimited string containing values corresponding to the order and count of the generated header.
+- Given a comma-delimited string containing values corresponding to the order and count of the generated header, generate a class instance.
+
+The `[CsvIgnore]` attribute makes a property invisible to header and values generators.
+
+___
+
+Version 1.0.3 adds advanced capability:
+
+- Extract an instance from a CSV file where the header and values do not strictly follow the format of the generated header. In this case, a class can be designed with properties that correspond to the values of interest in the file. Other values in other columns will be safely ignored.
+- 
+
+The `[HeaderText]` attribute makes a property mappable to header names in the file that are different from the property names in the class.
+
+
+The type conversion has been greatly expanded, and now supports almost any System type that has a static `Parse` method.
+
 
 #### Methods
 ```
 /// <summary>
-/// Enumerates the public R/W property names of an instance of @type.
+/// Enumerates the public R/W property names of an instance of @type as comma-delimited string.
 /// </summary>
 /// <returns>Comma delimited list of names.</returns>
 public static string GetCsvHeader(this Type @type);
 
 /// <summary>
-/// Enumerates the public R/W property names of an instance of @type.
+/// Enumerates the public R/W property names of an instance of @type as array.
 /// </summary>
 /// <returns>String array of names.</returns>
 public static string[] GetCsvHeaderArray(this Type @type);
@@ -28,6 +48,13 @@ public static T FromCsvLine<T>(this Type @type, string csvLine);
 /// </summary>
 /// <returns>Comma delimited enumuration of public R/W property values.</returns>
 public static string ToCsvLine<T>(this T instance);
+
+/// <summary>
+/// Fuzzy deserialization of an instance of @type from comma delimited string, meaning
+/// that it's tolerant of names in header that aren't directly mapped to the object.
+/// </summary>
+/// <returns>Instance of type T</returns>
+public static T Extract<T>(this Type @type, string unqualifiedHeader, string csvLine, bool ignoreCase = false);
 ```
 
 #### Attribute
