@@ -93,7 +93,7 @@ namespace IVSoftware.Portable.Csv
         public static T Extract<T>(this Type @type, string unqualifiedHeader, string csvLine, bool ignoreCase = false)
             where T : new()
         {
-            if (csvLine == type.GetCsvHeader())
+            if (csvLine == unqualifiedHeader)
             {
                 // Can't make an instance of T from the header row.
                 return default;

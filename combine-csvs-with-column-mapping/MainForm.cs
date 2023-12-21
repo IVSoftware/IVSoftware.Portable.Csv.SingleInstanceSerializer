@@ -35,6 +35,16 @@ namespace combine_csvs_with_column_mapping
                     Debug.Assert(false, "Expecting header");
                 }
             }
+            bool save = true;
+            if(save)
+            {
+                var savePath = Path.Combine(Folder, "master.csv");
+                var builder = new List<string>();
+                builder.Add(typeof(MasterRecord).GetCsvHeader());
+                builder.AddRange(Recordset.Select(_ => _.ToCsvLine()));
+                var lines = string.Join(Environment.NewLine, builder.ToArray());
+                File.WriteAllText(savePath, lines);
+            }
         }
         BindingList<MasterRecord> Recordset { get; } = new BindingList<MasterRecord>();
     }

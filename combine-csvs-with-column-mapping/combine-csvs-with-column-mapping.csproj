@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <RootNamespace>combine_csvs_with_column_mapping</RootNamespace>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IVSoftware.Portable.Csv.SingleInstanceSerializer\IVSoftware.Portable.Csv.SingleInstanceSerializer.csproj" />
+    <PackageReference Include="IVSoftware.Portable.Csv.SingleInstanceSerializer" Version="1.0.3-rc" />
   </ItemGroup>
 
   <ItemGroup>
