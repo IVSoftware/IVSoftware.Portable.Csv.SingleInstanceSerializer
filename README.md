@@ -12,11 +12,9 @@ ___
 
 Version 1.0.3 adds advanced capability:
 
-- Extract an instance from a CSV file where the header and values do not strictly follow the format of the generated header. In this case, a class can be designed with properties that correspond to the values of interest in the file. Other values in other columns will be safely ignored.
-- 
+- Extract an instance from a CSV file where the header and values do not strictly follow the format of the generated header. In this case, a class can be designed with properties that correspond to the values of interest in the file. Other values in other columns will be safely ignored. In general, this would be used to compose a Master Record that cherry picks values from multiple csv files.
 
 The `[HeaderText]` attribute makes a property mappable to header names in the file that are different from the property names in the class.
-
 
 The type conversion has been greatly expanded, and now supports almost any System type that has a static `Parse` method.
 
