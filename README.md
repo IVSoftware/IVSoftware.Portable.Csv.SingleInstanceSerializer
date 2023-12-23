@@ -139,4 +139,8 @@ BindingList<Person> Persons { get; } = new BindingList<Person>();
 
 #### StackOverflow
 
-[Populate a ListBox with CSV values from a custom class](https://stackoverflow.com/a/77524987/5438626)
+[Populate a ListBox with CSV values from a custom class](https://stackoverflow.com/q/77514872/5438626) [[README](https://github.com/IVSoftware/serialization-binding-intro)]
+_Use Startup Project = 'serialization-intro'_
+
+[Combine CSVs with different columns](https://stackoverflow.com/q/77696298/5438626)
+_Use Startup Project = 'combine-csvs-with-column-mapping'_

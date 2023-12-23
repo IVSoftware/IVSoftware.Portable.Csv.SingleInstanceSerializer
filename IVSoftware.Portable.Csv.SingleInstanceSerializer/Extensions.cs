@@ -129,47 +129,50 @@ namespace IVSoftware.Portable.Csv
 
         private static void setValue<T>(T newT, string stringValue, PropertyInfo propertyInfo) where T : new()
         {
-            Type propertyType;
-            // For Nullable types, we care only about the underlying type.
-            if (Nullable.GetUnderlyingType(propertyInfo.PropertyType) is Type underlyingType)
+            if (propertyInfo.CanWrite)
             {
-                propertyType = underlyingType;
-            }
-            else
-            {
-                propertyType = propertyInfo.PropertyType;
-            }
-
-            if (propertyType.Equals(typeof(String)))
-            {
-                // For type String, assign the value even if it's empty or null
-                propertyInfo.SetValue(newT, stringValue);
-            }
-            else
-            {
-                // If the value is empty, don't assign anything
-                if (string.IsNullOrEmpty(stringValue))
+                Type propertyType;
+                // For Nullable types, we care only about the underlying type.
+                if (Nullable.GetUnderlyingType(propertyInfo.PropertyType) is Type underlyingType)
                 {
-                    return;
+                    propertyType = underlyingType;
                 }
                 else
                 {
-                    var method = propertyType.GetMethod("Parse", new[] { typeof(string) });
-                    if (method?.IsStatic == true)
+                    propertyType = propertyInfo.PropertyType;
+                }
+
+                if (propertyType.Equals(typeof(String)))
+                {
+                    // For type String, assign the value even if it's empty or null
+                    propertyInfo.SetValue(newT, stringValue);
+                }
+                else
+                {
+                    // If the value is empty, don't assign anything
+                    if (string.IsNullOrEmpty(stringValue))
                     {
-                        try
-                        {
-                            var v = method.Invoke(null, new object[] { stringValue });
-                            propertyInfo.SetValue(newT, v);
-                        }
-                        catch (TargetInvocationException ex)
-                        {
-                            throw ex.InnerException ?? ex;
-                        }
+                        return;
                     }
                     else
                     {
-                        throw new NotSupportedException(propertyType.Name);
+                        var method = propertyType.GetMethod("Parse", new[] { typeof(string) });
+                        if (method?.IsStatic == true)
+                        {
+                            try
+                            {
+                                var v = method.Invoke(null, new object[] { stringValue });
+                                propertyInfo.SetValue(newT, v);
+                            }
+                            catch (TargetInvocationException ex)
+                            {
+                                throw ex.InnerException ?? ex;
+                            }
+                        }
+                        else
+                        {
+                            throw new NotSupportedException(propertyType.Name);
+                        }
                     }
                 }
             }
@@ -209,6 +212,14 @@ namespace IVSoftware.Portable.Csv
                 return propertyInfo.Name;
             }
         }
+
+        public static string[] GetAllLines<T>(this IEnumerable<T> collection)
+        {
+            List<string> lines = new List<string> { GetCsvHeader(typeof(T)) };
+            lines.AddRange(collection.Select(_=>_.ToCsvLine()));
+            return lines.ToArray();
+        }
+
         private static string[] getQualifiedCsvHeaderArrayFromString(this Type type, string headerLine)
         {
             var qualifiedHeaderNames = type.GetCsvPropertyMap();

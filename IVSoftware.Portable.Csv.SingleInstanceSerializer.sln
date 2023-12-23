@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "serialization-intro", "seri
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "combine-csvs-with-column-mapping", "combine-csvs-with-column-mapping\combine-csvs-with-column-mapping.csproj", "{B473526B-6815-44AD-956E-ABD9907D3D82}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testbench", "Testbench\Testbench.csproj", "{5EBBB294-6FC1-4BD7-AE13-F2D1710FEB6D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{B473526B-6815-44AD-956E-ABD9907D3D82}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B473526B-6815-44AD-956E-ABD9907D3D82}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B473526B-6815-44AD-956E-ABD9907D3D82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EBBB294-6FC1-4BD7-AE13-F2D1710FEB6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EBBB294-6FC1-4BD7-AE13-F2D1710FEB6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EBBB294-6FC1-4BD7-AE13-F2D1710FEB6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EBBB294-6FC1-4BD7-AE13-F2D1710FEB6D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
