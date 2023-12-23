@@ -1,4 +1,4 @@
-## IVSoftware.Portable.Csv.SingleInstanceSerializer
+﻿## IVSoftware.Portable.Csv.SingleInstanceSerializer
 
 These extensions reflect the properties of a given class T. The basic capabilities are:
 
@@ -82,73 +82,177 @@ public class StringFormatAttribute : Attribute
 
 
 ```
-public MainForm()
+public partial class MainForm : Form
 {
-    InitializeComponent();
-    listBox.DataSource = Persons;
-    listBox.DisplayMember = "Name";
-    buttonToCsv.Click += (sender, e) =>
+    static string Folder { get; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), 
+        "IVSoftware",
+        Assembly.GetExecutingAssembly().GetName().Name,
+        "Data");
+    string Output { get; } = Path.Combine(Folder, "Output.csv");
+    public MainForm()
     {
-        if (Persons.Any() || warnEmpty())
+        InitializeComponent();
+        Directory.CreateDirectory(Folder);
+        var buttonLocation = new Point(dataGridView.Width - 70, dataGridView.Height - 70);
+        Label buttonRefresh = new Label
         {
-            List<string> builder = new List<string>
-            {
-                typeof(Person).GetCsvHeader(),
-            };
-            foreach (var person in Persons)
-            {
-                builder.Add(person.ToCsvLine());
-            }
-            Directory.CreateDirectory(Path.GetDirectoryName(_filePathCsv));
-            File.WriteAllLines(_filePathCsv, builder.ToArray());
-            Process.Start("notepad.exe", _filePathCsv);
-        }
-    };
-    buttonFromCsv.Click += async (sender, e) =>
-    {
-        UseWaitCursor = true;
-        await localClearAndWait();
-        if (File.Exists(_filePathCsv))
+            Size = new Size(60, 60),
+            Text = "↻",
+            TextAlign = ContentAlignment.MiddleCenter,
+            Font = new Font(Font.FontFamily, 12),
+            Anchor = AnchorStyles.Bottom | AnchorStyles.Right,
+            Location = buttonLocation,
+            ForeColor = Color.White,
+            BackColor = Color.CornflowerBlue,
+        };
+        GraphicsPath path = new GraphicsPath();
+        path.AddEllipse(0, 0, buttonRefresh.Width, buttonRefresh.Height);
+        buttonRefresh.Region = new Region(path);
+        dataGridView.Controls.Add(buttonRefresh);
+        buttonRefresh.Click += (sender, e) =>
         {
-            string[] lines = File.ReadAllLines(_filePathCsv);
-            if (lines.FirstOrDefault() is string header)
+            BeginInvoke(() =>
             {
-                for (int i = 1; i < lines.Length; i++)
+                var titleBuilder = new List<string>();
+
+                File.WriteAllLines(Output, Recordset.GetAllLines());
+                if (ModifierKeys.HasFlag(Keys.Alt))
                 {
-                    var line = lines[i];
-                    if (!string.IsNullOrEmpty(line))
+                    titleBuilder.Add("[Open With System Default App]");
+                    // Open with system Default App for .csv e.g. MS Excel.
+                    Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = Output, });
+                }
+                else
+                {
+                    titleBuilder.Add("[Open With Notepad]");
+                    Process.Start("notepad.exe", Output);
+                }
+
+                string[] lines = File.ReadAllLines(Output);
+
+                if (ModifierKeys.HasFlag(Keys.Control))
+                {
+                    titleBuilder.Add("[Fuzzy Extract header]");
+                    if (lines.FirstOrDefault() is string header)
                     {
-                        Persons.Add(typeof(Person).FromCsvLine<Person>(line));
+                        for (int i = 1; i < lines.Length; i++)
+                        {
+                            var line = lines[i];
+                            if (!string.IsNullOrEmpty(line))
+                            {
+                                MasterRecord record = typeof(MasterRecord).Extract<MasterRecord>(header, line);
+                                Recordset.Add(record);
+                            }
+                        }
                     }
                 }
-            }
-            else
-            {
-                Debug.Assert(false, "Expecting header");
-            }
-        }
-        UseWaitCursor = false;
-    };
-    async Task localClearAndWait()
-    {
-        if(Persons.Any())
-        {
-            Persons.Clear();
-            await Task.Delay(1000); // Observe the cleared list
-        }
+                else
+                {
+                    titleBuilder.Add("[Strict header]");
+                    if (lines.FirstOrDefault() is string header)
+                    {
+                        for (int i = 1; i < lines.Length; i++)
+                        {
+                            var line = lines[i];
+                            if (!string.IsNullOrEmpty(line))
+                            {
+                                MasterRecord record = typeof(MasterRecord).FromCsvLine<MasterRecord>(line);
+                                Recordset.Add(record);
+                            }
+                        }
+                    }
+                }
+                Text = string.Join(string.Empty, titleBuilder.ToArray().Reverse());
+            });
+        };
     }
+    protected override void OnLoad(EventArgs e)
+    {
+        base.OnLoad(e);
+        dataGridView.DataSource = Recordset;
+
+        var masterType = typeof(MasterRecord);
+        foreach (DataGridViewColumn column in dataGridView.Columns)
+        {
+            column.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            if(masterType.GetProperty(column.Name) is PropertyInfo pi)
+            {
+                if(pi.GetCustomAttribute<HeaderTextAttribute>() is HeaderTextAttribute headerText)
+                {
+                    column.HeaderText = headerText.Value;
+                }
+                if (pi.GetCustomAttribute<StringFormatAttribute>() is StringFormatAttribute stringFormat)
+                {
+                    column.DefaultCellStyle.Format = stringFormat.Value;
+                }
+            }
+        }
+        dataGridView.Columns[nameof(MasterRecord.Name)].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+        dataGridView.Columns[nameof(MasterRecord.ID)].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+        Recordset.Add(new MasterRecord
+        {
+            Int32 = 100,
+            Name = "IV, Tommy",
+            IgnoreMe = $"{nameof(MasterRecord.IgnoreMe)} 1",
+        });
+        Recordset.Add(new MasterRecord
+        {
+            Name = "Red, Green, Yellow, Blue",
+            IgnoreMe = $"{nameof(MasterRecord.IgnoreMe)} 2",
+        });
+        Recordset.Add(new MasterRecord
+        {
+            Name = nameof(Math.PI),
+            Double = Math.PI,
+        });
+        Recordset.Add(new MasterRecord
+        {
+            Object = "Unknown",
+            Double = 1.2345678,
+            Float = 2.34567890f,
+            Decimal = 3.45678901m,
+        });
+    }
+    BindingList<MasterRecord> Recordset { get; } = new BindingList<MasterRecord>();
 }
-bool warnEmpty()
+```
+___
+**Test Class v 1.0.3**
+
+```
+class MasterRecord
 {
-    return !DialogResult.Cancel.Equals(
-        MessageBox.Show(
-            "Person list is empty. Save anyway?",
-            "Confirm",
-            MessageBoxButtons.OKCancel,
-            MessageBoxIcon.Question
-        ));
+    public MasterRecord() => _id++;
+
+    public int ID { get; } = _id;
+    private static int _id = 1;
+
+    [StringFormat(@"yyyy.MM.dd")]
+
+    [HeaderText("Formatted")]
+    public DateTime DateTime { get; set; } = DateTime.Now;
+
+    public DateOnly DateOnly { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+
+    public TimeOnly TimeOnly { get; set; } = TimeOnly.FromDateTime(DateTime.Now);
+    public int? Int32 { get; set; }
+
+    [HeaderText("Test String")]
+    public string Name { get; set; } = $"{nameof(MasterRecord)} {_id}";
+
+    [CsvIgnore]
+    public string IgnoreMe { get; set; }
+
+    [StringFormat("F4")]
+    public double? Double { get; set; }
+    public float? Float { get; set; }
+
+    [StringFormat("F2")]
+    public decimal? Decimal { get; set; }
+    public object Object { get; set; }
 }
-BindingList<Person> Persons { get; } = new BindingList<Person>();
 ```
 
 #### StackOverflow

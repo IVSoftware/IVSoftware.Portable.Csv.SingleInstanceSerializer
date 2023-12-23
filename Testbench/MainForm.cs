@@ -38,14 +38,18 @@ namespace Testbench
             {
                 BeginInvoke(() =>
                 {
+                    var titleBuilder = new List<string>();
+
                     File.WriteAllLines(Output, Recordset.GetAllLines());
                     if (ModifierKeys.HasFlag(Keys.Alt))
                     {
+                        titleBuilder.Add("[Open With System Default App]");
                         // Open with system Default App for .csv e.g. MS Excel.
                         Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = Output, });
                     }
                     else
                     {
+                        titleBuilder.Add("[Open With Notepad]");
                         Process.Start("notepad.exe", Output);
                     }
 
@@ -53,6 +57,7 @@ namespace Testbench
 
                     if (ModifierKeys.HasFlag(Keys.Control))
                     {
+                        titleBuilder.Add("[Fuzzy Extract header]");
                         if (lines.FirstOrDefault() is string header)
                         {
                             for (int i = 1; i < lines.Length; i++)
@@ -68,6 +73,7 @@ namespace Testbench
                     }
                     else
                     {
+                        titleBuilder.Add("[Strict header]");
                         if (lines.FirstOrDefault() is string header)
                         {
                             for (int i = 1; i < lines.Length; i++)
@@ -81,6 +87,7 @@ namespace Testbench
                             }
                         }
                     }
+                    Text = string.Join(string.Empty, titleBuilder.ToArray().Reverse());
                 });
             };
         }

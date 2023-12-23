@@ -1,12 +1,8 @@
-﻿
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.Design;
-    using System.Diagnostics;
-    using System.Globalization;
-    using System.Linq;
-    using System.Reflection;
-using System.Runtime.Serialization;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace IVSoftware.Portable.Csv
