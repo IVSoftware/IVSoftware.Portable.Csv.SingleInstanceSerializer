@@ -14,6 +14,7 @@ namespace Testbench
             Assembly.GetExecutingAssembly().GetName().Name,
             "Data");
         string Output { get; } = Path.Combine(Folder, "Output.csv");
+        string OutputAlt { get; } = Path.Combine(Folder, "OutputAlt.csv");
         public MainForm()
         {
             InitializeComponent();
@@ -53,9 +54,19 @@ namespace Testbench
                         Process.Start("notepad.exe", Output);
                     }
 
-                    string[] lines = File.ReadAllLines(Output);
+                    string[] lines;
 
-                    if (ModifierKeys.HasFlag(Keys.Control))
+                    if (Control.IsKeyLocked(Keys.CapsLock))
+                    {
+                        makeFuzzyRecordFile();
+                        lines = File.ReadAllLines(OutputAlt);
+                    }
+                    else
+                    {
+                        lines = File.ReadAllLines(Output);
+                    }
+
+                    if (ModifierKeys.HasFlag(Keys.Control) || IsKeyLocked(Keys.CapsLock))
                     {
                         titleBuilder.Add("[Fuzzy Extract header]");
                         if (lines.FirstOrDefault() is string header)
@@ -76,6 +87,10 @@ namespace Testbench
                         titleBuilder.Add("[Strict header]");
                         if (lines.FirstOrDefault() is string header)
                         {
+                            Debug.Assert(
+                                string.Equals(header, typeof(MasterRecord).GetCsvHeader()),
+                                "Expecting a strict match when FromCsvLine is invoked."
+                            );
                             for (int i = 1; i < lines.Length; i++)
                             {
                                 var line = lines[i];
@@ -86,6 +101,41 @@ namespace Testbench
                                 }
                             }
                         }
+#if false
+                        // A test case.
+                        // Basically, to prove that the Extract method 'does' work on an
+                        // irregular file, it's necessary to show that FromCsvLine() 'doesn't'.
+
+                        if(File.Exists(OutputAlt))
+                        {
+                            var failLines = File.ReadAllLines(OutputAlt);
+                            if (failLines.FirstOrDefault() is string irregularHeader)
+                            {
+                                Debug.Assert(
+                                    !string.Equals(irregularHeader, typeof(MasterRecord).GetCsvHeader()),
+                                    "Expecting a discrepancy in headers."
+                                );
+                                try
+                                {
+                                    for (int i = 1; i < failLines.Length; i++)
+                                    {
+                                        var failLine = failLines[i];
+                                        if (!string.IsNullOrEmpty(failLine))
+                                        {
+                                            MasterRecord record = typeof(MasterRecord).FromCsvLine<MasterRecord>(failLine);
+                                            Recordset.Add(record);
+                                        }
+                                }
+                                }
+                                catch (Exception ex)
+                                {
+                                    // We ARE expecting this exception in this case. This is why
+                                    // we use Extract to read files where the header is not a match.
+                                    Debug.Fail(ex.Message);
+                                }
+                            }
+                        }
+#endif
                     }
                     Text = string.Join(string.Empty, titleBuilder.ToArray().Reverse());
                 });
@@ -115,6 +165,7 @@ namespace Testbench
             }
             dataGridView.Columns[nameof(MasterRecord.Name)].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             dataGridView.Columns[nameof(MasterRecord.ID)].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
             Recordset.Add(new MasterRecord
             {
                 Int32 = 100,
@@ -140,6 +191,18 @@ namespace Testbench
             });
         }
         BindingList<MasterRecord> Recordset { get; } = new BindingList<MasterRecord>();
+
+        /// <summary>
+        /// Makes a file that is irregular with respect to Master Record for testing purposes.
+        /// </summary>
+        private void makeFuzzyRecordFile()
+        {
+            var fuzzyRecordset = new List<FuzzyRecord>();
+            fuzzyRecordset.AddRange(Enumerable.Range(0, 3).Select(_=> new FuzzyRecord()));
+
+            File.WriteAllLines(OutputAlt, fuzzyRecordset.GetAllLines());
+            Process.Start("notepad.exe", OutputAlt);
+        }
     }
 
     class MasterRecord
@@ -147,7 +210,7 @@ namespace Testbench
         public MasterRecord() => _id++;
 
         public int ID { get; } = _id;
-        private static int _id = 1;
+        protected static int _id = 1;
 
         [StringFormat(@"yyyy.MM.dd")]
 
@@ -159,18 +222,35 @@ namespace Testbench
         public TimeOnly TimeOnly { get; set; } = TimeOnly.FromDateTime(DateTime.Now);
         public int? Int32 { get; set; }
 
-        [HeaderText("Test String")]
-        public string Name { get; set; } = $"{nameof(MasterRecord)} {_id}";
-
-        [CsvIgnore]
-        public string IgnoreMe { get; set; }
-
         [StringFormat("F4")]
         public double? Double { get; set; }
         public float? Float { get; set; }
 
         [StringFormat("F2")]
         public decimal? Decimal { get; set; }
+
+        [CsvIgnore]
+        public string IgnoreMe { get; set; }
         public object Object { get; set; }
+
+        [HeaderText("Test String")]
+        public string Name { get; set; } = $"{nameof(MasterRecord)} {_id}";
+    }
+
+    class FuzzyRecord
+    {
+        public FuzzyRecord() => _id++;
+
+        public int ID { get; } = _id;
+        protected static int _id = 1;
+
+        [HeaderText("Test String")]
+        public string TestString { get; set; } = $"{nameof(TestString)} {_id}";
+        public string ExtraString { get; set; } = $"{nameof(ExtraString)} {_id}";
+        public int ExtraInt { get; set; } = _id;
+
+        public int Int32 { get; set; } = _rando.Next(10, 1000);
+
+        private static Random _rando = new Random();
     }
 }

@@ -1,22 +1,17 @@
 ﻿## IVSoftware.Portable.Csv.SingleInstanceSerializer
 
-These extensions reflect the properties of a given class T. The basic capabilities are:
-
-- Generate a comma-delimited header string, based on the property names of class T.
-- Given an instance of class T, generate a comma-delimited string containing values corresponding to the order and count of the generated header.
-- Given a comma-delimited string containing values corresponding to the order and count of the generated header, generate a class instance.
-
-The `[CsvIgnore]` attribute makes a property invisible to header and values generators.
-
+As a basic premise, the `GetCsvHeader` method will reflect the property names of Class<T> and the methods `ToCsvLine` and `FromCsvLine` will use that array to index the values in the columns of the file. The `[CsvIgnore]` attribute is used to make any given property invisible to the serializer.
 ___
 
-Version 1.0.3 adds advanced capability:
+Version 1.0.3 added features:
 
-- Extract an instance from a CSV file where the header and values do not strictly follow the format of the generated header. In this case, a class can be designed with properties that correspond to the values of interest in the file. Other values in other columns will be safely ignored. In general, this would be used to compose a Master Record that cherry picks values from multiple csv files.
+- The type conversion has been greatly expanded, and now supports almost any System type that has a static `Parse` method.
+
+- Using the new `Extract` method, an instance can be created by cherry-picking values from an arbitrary CSV file where the header and values do not strictly follow the format of the generated header. In this case, a class can be designed with properties that correspond to the values of interest in the file. Other values in other columns will be safely ignored. In general, this would be used to compose a Master Record list comprised of different properties from different files.
 
 The `[HeaderText]` attribute makes a property mappable to header names in the file that are different from the property names in the class.
 
-The type conversion has been greatly expanded, and now supports almost any System type that has a static `Parse` method.
+The `[StringFormat]` attribute makes a numeric or DateTime value formattable.
 
 
 #### Methods
@@ -79,10 +74,12 @@ public class StringFormatAttribute : Attribute
 ```
 
 #### Usage
+A TestBench project is included in this repo. When it is selected as the Startup Project, option keys work as follows:
 
 ##### Modifier Keys:
 - [Control] Reads file using Extract instead of FromCsvLine (which requires a strict header)
 - [ALT] Opens loopback in System Default App (e.g. MS Excel) instead of Notepad.
+- [CapsLock] Generates an irregular file of `FuzzyRecord` e.g. where CsvHeader is "ID, Test String, ExtraString, ExtraInt, Int32" and reads it back as `MasterRecord` as a way of testing the `Extract` method. (Reading the irregular file using `FromCsvLine` would throw exceptions in this case and this is by design.)
 
 ```
 public partial class MainForm : Form
