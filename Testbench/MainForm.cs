@@ -36,22 +36,25 @@ namespace Testbench
             dataGridView.Controls.Add(buttonRefresh);
             buttonRefresh.Click += (sender, e) =>
             {
-                BeginInvoke(() => File.WriteAllLines(Output, Recordset.GetAllLines()));
-                Process.Start("notepad.exe", Output);
+                BeginInvoke(() =>
+                {
+                    File.WriteAllLines(Output, Recordset.GetAllLines());
+                    Process.Start("notepad.exe", Output);
                     string[] lines = File.ReadAllLines(Output);
 
-                if (lines.FirstOrDefault() is string header)
-                {
-                    for (int i = 1; i < lines.Length; i++)
+                    if (lines.FirstOrDefault() is string header)
                     {
-                        var line = lines[i];
-                        if (!string.IsNullOrEmpty(line))
+                        for (int i = 1; i < lines.Length; i++)
                         {
-                            MasterRecord record = typeof(MasterRecord).Extract<MasterRecord>(header, line);
-                            Recordset.Add(record);
+                            var line = lines[i];
+                            if (!string.IsNullOrEmpty(line))
+                            {
+                                MasterRecord record = typeof(MasterRecord).Extract<MasterRecord>(header, line);
+                                Recordset.Add(record);
+                            }
                         }
                     }
-                }
+                });
             };
         }
         protected override void OnLoad(EventArgs e)
@@ -76,7 +79,12 @@ namespace Testbench
             dataGridView.Columns[nameof(MasterRecord.ID)].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             Recordset.Add(new MasterRecord
             {
-                Int = 100
+                Int = 100,
+                Name = "IV, Tommy"
+            });
+            Recordset.Add(new MasterRecord
+            {
+                Name = "Red, Green, Yellow, Blue",
             });
         }
         BindingList<MasterRecord> Recordset { get; } = new BindingList<MasterRecord>();
@@ -84,12 +92,16 @@ namespace Testbench
 
     class MasterRecord
     {
-        private static int _id = 1;
         public MasterRecord() => _id++;
+
         public int ID { get; } = _id;
+        private static int _id = 1;
+
+        //[StringFormat(@"MM/dd/yyyy")]
+        public DateTime DateTime { get; set; } = DateTime.Now;
         public int? Int { get; set; }
 
-        [HeaderText("Full Name")]
+        [HeaderText("Test String")]
         public string Name { get; set; } = $"{nameof(MasterRecord)} {_id}";
     }
 }

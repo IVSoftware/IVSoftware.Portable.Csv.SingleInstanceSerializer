@@ -55,13 +55,20 @@ public static string ToCsvLine<T>(this T instance);
 public static T Extract<T>(this Type @type, string unqualifiedHeader, string csvLine, bool ignoreCase = false);
 ```
 
-#### Attribute
+#### Attributes
 
 ```
 /// <summary>
 /// Opt-out this property from Header and Instance serialization.
 /// </summary>
 [CsvIgnore]
+```
+
+```
+/// <summary>
+/// Header text mapping, if different from Property name or if spaces are present.
+/// </summary>
+[HeaderText]
 ```
 
 #### Usage

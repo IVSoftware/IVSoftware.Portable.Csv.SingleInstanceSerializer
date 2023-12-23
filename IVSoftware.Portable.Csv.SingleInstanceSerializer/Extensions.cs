@@ -42,12 +42,13 @@ namespace IVSoftware.Portable.Csv
         /// Enumerates the public R/W property names of an instance of @type.
         /// </summary>
         /// <returns>String array of names.</returns>
-        public static Dictionary<string, PropertyInfo> GetCsvPropertyMap(this Type @type)
+        public static Dictionary<string, PropertyInfo> GetCsvPropertyMap(this Type type)
         {
             KnownTypeInfo info;
-            if (!KnownTypeDict.TryGetValue(@type, out info))
+            if (!KnownTypeDict.TryGetValue(type, out info))
             {
-                info = new KnownTypeInfo(@type);
+                info = new KnownTypeInfo(type);
+                KnownTypeDict[type] = info;
             }
             return info.CsvPropertyMap;
         }
@@ -185,13 +186,35 @@ namespace IVSoftware.Portable.Csv
         /// <returns>Comma delimited enumuration of public R/W property values.</returns>
         public static string ToCsvLine<T>(this T instance)
         {
+            var builder = new List<string>();
+
+            foreach (var propertyInfo in instance.GetType()
+                        .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                        .Where(_ => _.CanRead || _.CanWrite))
+            {
+                if (propertyInfo.GetValue(instance, null) is object value)
+                {
+                    if (value is IFormattable canFormat && propertyInfo.GetCustomAttribute<StringFormatAttribute>() is StringFormatAttribute attr)
+                    {
+                        builder.Add(canFormat.ToString(attr.Value ?? string.Empty, CultureInfo.InvariantCulture));
+                    }
+                    else
+                    {
+                        builder.Add(localEscape(value?.ToString()));
+                    }
+                }
+                else builder.Add(string.Empty);
+            }
+            return string.Join(",", builder);
+
+            var pis = instance.GetType()
+                        .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                        .Where(_ => _.CanRead || _.CanWrite);
             return
                 string.Join(
                     ",",
-                    instance.GetType()
-                        .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(_ => _.CanRead || _.CanWrite)
-                        .Select(_ => localEscape(_.GetValue(instance)?.ToString() ?? string.Empty)));
+                    pis.Select(_ => localEscape(_.GetValue(instance)?.ToString() ?? string.Empty)));
+
             string localEscape(string mightHaveCommas)
             {
                 if (mightHaveCommas.Contains(","))
@@ -265,6 +288,11 @@ namespace IVSoftware.Portable.Csv
     public class HeaderTextAttribute : Attribute
     {
         public HeaderTextAttribute(string value) => Value = value;
+        public string Value { get; }
+    }
+    public class StringFormatAttribute : Attribute
+    {
+        public StringFormatAttribute(string value) => Value = value;
         public string Value { get; }
     }
 }
