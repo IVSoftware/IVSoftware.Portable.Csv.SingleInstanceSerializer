@@ -50,7 +50,7 @@
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1178, 344);
+            ClientSize = new Size(1378, 844);
             Controls.Add(dataGridView);
             Name = "MainForm";
             Padding = new Padding(10);

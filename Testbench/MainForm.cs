@@ -39,7 +39,16 @@ namespace Testbench
                 BeginInvoke(() =>
                 {
                     File.WriteAllLines(Output, Recordset.GetAllLines());
-                    Process.Start("notepad.exe", Output);
+                    if (ModifierKeys.HasFlag(Keys.Alt))
+                    {
+                        // Open with system Default App for .csv e.g. MS Excel.
+                        Process.Start(new ProcessStartInfo { UseShellExecute = true, FileName = Output, });
+                    }
+                    else
+                    {
+                        Process.Start("notepad.exe", Output);
+                    }
+
                     string[] lines = File.ReadAllLines(Output);
 
                     if (lines.FirstOrDefault() is string header)
@@ -84,11 +93,25 @@ namespace Testbench
             Recordset.Add(new MasterRecord
             {
                 Int32 = 100,
-                Name = "IV, Tommy"
+                Name = "IV, Tommy",
+                IgnoreMe = $"{nameof(MasterRecord.IgnoreMe)} 1",
             });
             Recordset.Add(new MasterRecord
             {
                 Name = "Red, Green, Yellow, Blue",
+                IgnoreMe = $"{nameof(MasterRecord.IgnoreMe)} 2",
+            });
+            Recordset.Add(new MasterRecord
+            {
+                Name = nameof(Math.PI),
+                Double = Math.PI,
+            });
+            Recordset.Add(new MasterRecord
+            {
+                Object = "Unknown",
+                Double = 1.2345678,
+                Float = 2.34567890f,
+                Decimal = 3.45678901m,
             });
         }
         BindingList<MasterRecord> Recordset { get; } = new BindingList<MasterRecord>();
@@ -115,10 +138,14 @@ namespace Testbench
         public string Name { get; set; } = $"{nameof(MasterRecord)} {_id}";
 
         [CsvIgnore]
-        public string IgnoreMe { get; set; } = $"{nameof(IgnoreMe)} {_id}";
+        public string IgnoreMe { get; set; }
 
-        public decimal? Decimal { get; set; }
+        [StringFormat("F4")]
         public double? Double { get; set; }
         public float? Float { get; set; }
+
+        [StringFormat("F2")]
+        public decimal? Decimal { get; set; }
+        public object Object { get; set; }
     }
 }

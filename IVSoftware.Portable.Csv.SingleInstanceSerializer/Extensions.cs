@@ -144,7 +144,12 @@ namespace IVSoftware.Portable.Csv
                     propertyType = propertyInfo.PropertyType;
                 }
 
-                if (propertyType.Equals(typeof(String)))
+                if (propertyType.Equals(typeof(Object)))
+                {
+                    // For type Object, assign value as string
+                    propertyInfo.SetValue(newT, stringValue);
+                }
+                else if (propertyType.Equals(typeof(String)))
                 {
                     // For type String, assign the value even if it's empty or null
                     propertyInfo.SetValue(newT, stringValue);
@@ -178,8 +183,8 @@ namespace IVSoftware.Portable.Csv
                                 {
                                     throw new NotSupportedException(propertyType.Name);
                                 }
+                                return;
                             }
-                            return;
                         }
                         // 'Not' an else. It's a fallback in case an IFormatProvider method is not located.
                         var method = propertyType.GetMethod("Parse", new[] { typeof(string) });
@@ -215,7 +220,7 @@ namespace IVSoftware.Portable.Csv
 
             foreach (var propertyInfo in instance.GetType()
                         .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(_ => _.CanRead || _.CanWrite))
+                        .Where(_ => (_.CanRead || _.CanWrite) && _.GetCustomAttribute<CsvIgnoreAttribute>() == null))
             {
                 if (propertyInfo.GetValue(instance, null) is object value)
                 {
