@@ -6,7 +6,8 @@
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
-    using System.Text.RegularExpressions;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 
 namespace IVSoftware.Portable.Csv
 {
@@ -157,6 +158,30 @@ namespace IVSoftware.Portable.Csv
                     }
                     else
                     {
+                        if (propertyInfo.GetCustomAttribute<StringFormatAttribute>() is StringFormatAttribute attr)
+                        {
+                            if (propertyType.GetMethod("ParseExact", new[] { typeof(string), typeof(string), typeof(IFormatProvider) }) is MethodBase methodWithFormatProvider)
+                            {
+                                if (methodWithFormatProvider?.IsStatic == true)
+                                {
+                                    try
+                                    {
+                                        var v = methodWithFormatProvider.Invoke(null, new object[] { stringValue, attr.Value, CultureInfo.InvariantCulture });
+                                        propertyInfo.SetValue(newT, v);
+                                    }
+                                    catch (TargetInvocationException ex)
+                                    {
+                                        throw ex.InnerException ?? ex;
+                                    }
+                                }
+                                else
+                                {
+                                    throw new NotSupportedException(propertyType.Name);
+                                }
+                            }
+                            return;
+                        }
+                        // 'Not' an else. It's a fallback in case an IFormatProvider method is not located.
                         var method = propertyType.GetMethod("Parse", new[] { typeof(string) });
                         if (method?.IsStatic == true)
                         {
@@ -207,14 +232,6 @@ namespace IVSoftware.Portable.Csv
             }
             return string.Join(",", builder);
 
-            var pis = instance.GetType()
-                        .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                        .Where(_ => _.CanRead || _.CanWrite);
-            return
-                string.Join(
-                    ",",
-                    pis.Select(_ => localEscape(_.GetValue(instance)?.ToString() ?? string.Empty)));
-
             string localEscape(string mightHaveCommas)
             {
                 if (mightHaveCommas.Contains(","))
@@ -241,13 +258,6 @@ namespace IVSoftware.Portable.Csv
             List<string> lines = new List<string> { GetCsvHeader(typeof(T)) };
             lines.AddRange(collection.Select(_=>_.ToCsvLine()));
             return lines.ToArray();
-        }
-
-        private static string[] getQualifiedCsvHeaderArrayFromString(this Type type, string headerLine)
-        {
-            var qualifiedHeaderNames = type.GetCsvPropertyMap();
-            //var names = headerLine.Split(',').Where(_=>;
-            return default;
         }
 
         private static Dictionary<Type, KnownTypeInfo> KnownTypeDict { get; } =
@@ -284,12 +294,25 @@ namespace IVSoftware.Portable.Csv
             public Dictionary<string, PropertyInfo> CsvPropertyMap { get; } = new Dictionary<string, PropertyInfo>();
         }
     }
+
+    /// <summary>
+    /// Opt-out this property from Header and Instance serialization.
+    /// </summary>
     public class CsvIgnoreAttribute : Attribute { }
+
+
+    /// <summary>
+    /// Header text mapping, if different from Property name or if spaces are present.
+    /// </summary>
     public class HeaderTextAttribute : Attribute
     {
         public HeaderTextAttribute(string value) => Value = value;
         public string Value { get; }
     }
+
+    /// <summary>
+    /// Format string for ToString() and ParseExact methods
+    /// </summary>
     public class StringFormatAttribute : Attribute
     {
         public StringFormatAttribute(string value) => Value = value;

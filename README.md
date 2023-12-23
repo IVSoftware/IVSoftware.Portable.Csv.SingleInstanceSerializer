@@ -62,13 +62,20 @@ public static T Extract<T>(this Type @type, string unqualifiedHeader, string csv
 /// Opt-out this property from Header and Instance serialization.
 /// </summary>
 [CsvIgnore]
-```
 
-```
 /// <summary>
 /// Header text mapping, if different from Property name or if spaces are present.
 /// </summary>
 [HeaderText]
+
+/// <summary>
+/// Format string for ToString() and ParseExact methods
+/// </summary>
+public class StringFormatAttribute : Attribute
+{
+    public StringFormatAttribute(string value) => Value = value;
+    public string Value { get; }
+}
 ```
 
 #### Usage

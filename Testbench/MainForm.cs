@@ -69,9 +69,13 @@ namespace Testbench
                 column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
                 if(masterType.GetProperty(column.Name) is PropertyInfo pi)
                 {
-                    if(pi.GetCustomAttribute<HeaderTextAttribute>() is HeaderTextAttribute attr)
+                    if(pi.GetCustomAttribute<HeaderTextAttribute>() is HeaderTextAttribute headerText)
                     {
-                        column.HeaderText = attr.Value;
+                        column.HeaderText = headerText.Value;
+                    }
+                    if (pi.GetCustomAttribute<StringFormatAttribute>() is StringFormatAttribute stringFormat)
+                    {
+                        column.DefaultCellStyle.Format = stringFormat.Value;
                     }
                 }
             }
@@ -97,8 +101,14 @@ namespace Testbench
         public int ID { get; } = _id;
         private static int _id = 1;
 
-        //[StringFormat(@"MM/dd/yyyy")]
+        [StringFormat(@"yyyy.MM.dd")]
+
+        [HeaderText("Formatted")]
         public DateTime DateTime { get; set; } = DateTime.Now;
+
+        public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+
+        public TimeOnly Time { get; set; } = TimeOnly.FromDateTime(DateTime.Now);
         public int? Int { get; set; }
 
         [HeaderText("Test String")]
