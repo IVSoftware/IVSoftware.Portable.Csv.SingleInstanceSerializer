@@ -72,15 +72,17 @@ namespace IVSoftware.Portable.Csv
             else
             {
                 var CsvHeaderNames = type.GetCsvHeaderArray();
+                var map = type.GetCsvPropertyMap();
                 var newT = Activator.CreateInstance<T>();
                 var values = Regex.Split(csvLine, IGNORE_ESCAPED_COMMAS_PATTERN);
                 for (int i = 0; i < CsvHeaderNames.Length; i++)
                 {
                     var propertyName = CsvHeaderNames[i];
-                    var value = removeOutsideQuotes(values[i]);
-                    if (@type.GetProperty(propertyName) is PropertyInfo pi)
+                    if (map.TryGetValue(propertyName, out var propertyInfo))
                     {
-                        setValue(newT, value, pi);
+                        var stringValue = removeOutsideQuotes(values[i]);
+
+                        setValue(newT: newT, stringValue: stringValue, propertyInfo: propertyInfo);
                     }
                 }
                 return newT;

@@ -51,15 +51,33 @@ namespace Testbench
 
                     string[] lines = File.ReadAllLines(Output);
 
-                    if (lines.FirstOrDefault() is string header)
+                    if (ModifierKeys.HasFlag(Keys.Control))
                     {
-                        for (int i = 1; i < lines.Length; i++)
+                        if (lines.FirstOrDefault() is string header)
                         {
-                            var line = lines[i];
-                            if (!string.IsNullOrEmpty(line))
+                            for (int i = 1; i < lines.Length; i++)
                             {
-                                MasterRecord record = typeof(MasterRecord).Extract<MasterRecord>(header, line);
-                                Recordset.Add(record);
+                                var line = lines[i];
+                                if (!string.IsNullOrEmpty(line))
+                                {
+                                    MasterRecord record = typeof(MasterRecord).Extract<MasterRecord>(header, line);
+                                    Recordset.Add(record);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (lines.FirstOrDefault() is string header)
+                        {
+                            for (int i = 1; i < lines.Length; i++)
+                            {
+                                var line = lines[i];
+                                if (!string.IsNullOrEmpty(line))
+                                {
+                                    MasterRecord record = typeof(MasterRecord).FromCsvLine<MasterRecord>(line);
+                                    Recordset.Add(record);
+                                }
                             }
                         }
                     }
