@@ -19,11 +19,12 @@
 		<AssemblyOriginatorKeyFile>231122.ivs.pfx</AssemblyOriginatorKeyFile>
 		<DebugType>embedded</DebugType>
 		<BaseVersion>1.0.3</BaseVersion>
-		<VersionPrefix>$(BaseVersion)-rc</VersionPrefix>
+		<VersionPrefix>$(BaseVersion)</VersionPrefix>
 		<PackageReleaseNotes>
+			- Serializer now supports most System types.
 			- Added Extract method which allows deserialization when header is not an exact match.
 			- Added [HeaderText] attribute which allows header names differ from the property name.
-			- Serializer now supports most System types.
+			- Added [StringFormat] attribute for numeric and date-time based values.
 		</PackageReleaseNotes>
 	</PropertyGroup>
 	<ItemGroup>

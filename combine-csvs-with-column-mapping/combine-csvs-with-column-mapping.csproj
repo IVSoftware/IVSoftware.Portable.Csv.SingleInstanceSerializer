@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IVSoftware.Portable.Csv.SingleInstanceSerializer" Version="1.0.3-rc" />
+    <PackageReference Include="IVSoftware.Portable.Csv.SingleInstanceSerializer" Version="*-*" />
   </ItemGroup>
 
   <ItemGroup>
