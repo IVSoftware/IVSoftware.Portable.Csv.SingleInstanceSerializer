@@ -83,7 +83,7 @@ namespace Testbench
             dataGridView.Columns[nameof(MasterRecord.ID)].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             Recordset.Add(new MasterRecord
             {
-                Int = 100,
+                Int32 = 100,
                 Name = "IV, Tommy"
             });
             Recordset.Add(new MasterRecord
@@ -106,12 +106,19 @@ namespace Testbench
         [HeaderText("Formatted")]
         public DateTime DateTime { get; set; } = DateTime.Now;
 
-        public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.Now);
+        public DateOnly DateOnly { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 
-        public TimeOnly Time { get; set; } = TimeOnly.FromDateTime(DateTime.Now);
-        public int? Int { get; set; }
+        public TimeOnly TimeOnly { get; set; } = TimeOnly.FromDateTime(DateTime.Now);
+        public int? Int32 { get; set; }
 
         [HeaderText("Test String")]
         public string Name { get; set; } = $"{nameof(MasterRecord)} {_id}";
+
+        [CsvIgnore]
+        public string IgnoreMe { get; set; } = $"{nameof(IgnoreMe)} {_id}";
+
+        public decimal? Decimal { get; set; }
+        public double? Double { get; set; }
+        public float? Float { get; set; }
     }
 }
