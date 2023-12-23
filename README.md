@@ -80,6 +80,9 @@ public class StringFormatAttribute : Attribute
 
 #### Usage
 
+##### Modifier Keys:
+- [Control] Reads file using Extract instead of FromCsvLine (which requires a strict header)
+- [ALT] Opens loopback in System Default App (e.g. MS Excel) instead of Notepad.
 
 ```
 public partial class MainForm : Form
